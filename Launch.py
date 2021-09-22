@@ -9,7 +9,7 @@ from Transaction import Transaction
 from Blockchain import Blockchain
 
 #Initializing a new blockchain for demonstration.
-blockchain = Blockchain(7, 7, 6)    
+blockchain = Blockchain(7, 7, 5)    
 
 #Setting up nodes, ensure that Dexter is the only node with weight for voting purposes.
 Dexter = Node(10, 7)
@@ -33,7 +33,7 @@ while user_input != 'n':
     else:
         node_amount = int(input("Number of coins with node: "))
         node_map[node_name] = Node(node_amount, 0)
-    user_input = input("Add another node? [type n to quit] ")    
+    user_input = input("Add another node? [Any key for yes or n to skip] ")    
 
 print("Current list of nodes:\n")
 pprint.pprint(node_map)
@@ -57,8 +57,8 @@ while user_input != 'n':
             node_map["Dexter"].updateWallet(amount)
             transaction = Transaction(node_name, "Dexter", amount)
             blockchain.AddTransaction(transaction)
-            print("Transaction successfully added with UUID " + transaction.uuid + ". Current state is UNVERIFIED.")
-    user_input = input("Add another transaction? [type n to quit] ")   
+            print("Transaction successfully added with UUID " + transaction.uuid + ". Current state is UNVERIFIED.\n")
+    user_input = input("Add another transaction? [Any key for yes or n to skip] ")   
 
 print("Current list of unverified transactions:\n")
 pprint.pprint(blockchain.unverified_transaction_pool)    
@@ -85,6 +85,7 @@ for transaction_uuid in temp:
             blockchain.UpdateTransactionVote(transaction_uuid, node_map["Dexter"].weight)
             break
         elif user_input == 'n':
+            print("[NOTICE] Transaction has been discarded. \n")
             break
 
 print()
@@ -92,7 +93,7 @@ print("Final Phase: All verified transactions are finalized and stored in the bl
 print("Each block has a maximum capacity. So verified transactions are split into multiple blocks as needed.")
 print("They are mined using a Proof of Work algorithm using Bitcoin.\n")
 print("Finally, the blockchain is reverified.")
-print()
+blockchain.ChainValidity(blockchain.blockchain)
 
 blockchain.finalize_verified()
 for block in blockchain.blockchain:
