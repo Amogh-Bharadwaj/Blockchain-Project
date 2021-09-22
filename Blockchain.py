@@ -90,7 +90,7 @@ class Blockchain:
     def ChainValidity(self):
         #All chains start with the same genesis block.
         chain = self.blockchain
-        if chain[0].block_data != "GENESIS_HASH":
+        if chain[0].block_data != "{}":
             print("Error: First block is not the genesis block.\n")
             return False
         

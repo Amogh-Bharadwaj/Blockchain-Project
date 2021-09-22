@@ -18,12 +18,13 @@ class Block:
         self.nonce = nonce
 
     def serialize(self):
-        output = {"timestamp": self.timestamp, "block_data": self.block_data, \
+        print(self.block_data)
+        output = {"timestamp": self.timestamp, "block_data": json.loads(self.block_data), \
         "proof_of_work": self.proof_of_work, "nonce": self.nonce}
         return json.dumps(output)        
     
 # A basic genesis block which all chains start from.
 def Genesis():
-    return Block("GENESIS_HASH","NONE", 0)
+    return Block("{}","NONE", 0)
 
 
