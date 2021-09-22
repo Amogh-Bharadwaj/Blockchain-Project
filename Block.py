@@ -26,3 +26,4 @@ class Block:
 def Genesis():
     return Block("GENESIS_HASH","NONE", 0)
 
+

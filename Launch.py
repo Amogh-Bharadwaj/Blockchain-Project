@@ -93,9 +93,11 @@ print("Final Phase: All verified transactions are finalized and stored in the bl
 print("Each block has a maximum capacity. So verified transactions are split into multiple blocks as needed.")
 print("They are mined using a Proof of Work algorithm using Bitcoin.\n")
 print("Finally, the blockchain is reverified.")
-blockchain.ChainValidity(blockchain.blockchain)
+
 
 blockchain.finalize_verified()
+blockchain.ChainValidity()
+
 for block in blockchain.blockchain:
     pprint.pprint(block.serialize())
 print()

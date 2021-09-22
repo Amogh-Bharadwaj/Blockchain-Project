@@ -68,7 +68,7 @@ class Blockchain:
                 self.unverified_transaction_pool[transaction_uuid] = transaction 
 
         elif transaction_uuid in self.verified_transaction_pool.keys():
-            #Removing spent transactions.
+            
             transaction = self.verified_transaction_pool.pop(transaction_uuid) 
             transaction.current_weight = transaction.current_weight + weight
 
@@ -87,10 +87,11 @@ class Blockchain:
         self.blockchain.append(Block(block_data, new_hash, nonce))
     
 
-    def ChainValidity(self, chain):
+    def ChainValidity(self):
         #All chains start with the same genesis block.
+        chain = self.blockchain
         if chain[0].block_data != "GENESIS_HASH":
-            print("Error in verifying - ",chain[0].timestamp)
+            print("Error: First block is not the genesis block.\n")
             return False
         
         for i in range(1,len(chain)): 
@@ -110,7 +111,7 @@ class Blockchain:
         if len(newChain) <= len(self.blockchain):
             return "updateError: New chain is not longer than current chain."
            
-        elif not self.ChainValidity(newChain):
+        elif not self.ChainValidity():
             return "validityError: New chain is invalid."
            
         else:
