@@ -1,113 +1,105 @@
 # BITS F452 - Blockchain Technology
-# Amogh Bharadwaj,
+# Amogh Bharadwaj, Kevin Biju Kizhake Kanichery
+
+import sys
+import pprint
 
 from Node import Node
+from Transaction import Transaction
 from Blockchain import Blockchain
-from random import choice,randint
 
-#Maximum number of transactions per block.
-TRANSACTION_THRESHOLD=7
+#Initializing a new blockchain for demonstration.
+blockchain = Blockchain(7, 7, 6)    
 
-# Getting sender and amount from the transaction
-def parse_transaction(transaction):
-    trans_list = list(transaction.split())  # "M sends 4 coins to J" -> ["M","sends","4","coins","to","J"]
+#Setting up nodes, ensure that Dexter is the only node with weight for voting purposes.
+Dexter = Node(10, 7)
 
-    sender = trans_list[0]
-    amount = -1*int(trans_list[2])
+node_map = {"Dexter": Dexter}
 
-    return sender,amount
+print("BITS F452 Blockchain Assignment 1 Demonstration")
+print("Project by:")
+print("\t1. Anish Kacham [2019A7PS0091H]")
+print("\t2. Amogh Bharadwaj [2019A7PS0086H]")
+print("\t3. Kevin Biju Kizhake Kanichery [2019A7PS0045H]\n")
 
-# Nodes for demonstration purpose.
-Dexter = Node(10) #Dexter has 10 coins in his bank account.
-Kevin = Node(50)
-Anish = Node(50)
-Amogh = Node(6)
+print("Phase #1: We begin add one or more nodes representing customers of Dexter's shop.")
+print("By definition, these nodes shouldn't be able to verify the transactions. Therefore we give all these nodes a voting weight of 0.\n")
 
+user_input = 'y'
+while user_input != 'n':
+    node_name = input("Enter name of new node: ")
+    if node_name in node_map.keys():
+        print("Node with this name already exists!", file = sys.stderr)
+    else:
+        node_amount = int(input("Number of coins with node: "))
+        node_map[node_name] = Node(node_amount, 0)
+    user_input = input("Add another node? [type n to quit] ")    
 
-# Some data structures just for convenience.
-customers = ["Kevin","Anish","Amogh"]
-customer_map = {"Kevin":Kevin,"Anish":Anish,"Amogh":Amogh}
+print("Current list of nodes:\n")
+pprint.pprint(node_map)
+print()
 
-#Pool of unverified transactions.
-unverified_pool = []
+print("Phase #2: We now add one or more transactions from the customer to Dexter.")
+print("The system automatically checks if the customer can pay the amount mentioned.")
+print("Each transaction has a unique UUID assigned to it.\n")
 
-#Populating pool of transactions with sample transactions for demonstration purpose.
-for i in range(7):
-    new_transaction = choice(customers)+" sends "+str(randint(1,60))+" coins to Dexter"
-    unverified_pool.append(new_transaction)
-
-# Pool of confirmed transactions.
-verified_pool = []
-
-#Initialising blockchain
-blockChain = Blockchain()
-
-
-print("Welcome, Dexter. Please validate the following transactions(sorted by timestamp): \n")
-print("-"*170)
-print("\n")
-
-#Iterating through unverified pool, 7 at a time.
-for i in range(0,len(unverified_pool)-TRANSACTION_THRESHOLD+int(len(unverified_pool)==7),TRANSACTION_THRESHOLD):
-    print("BLOCK ",(i//7)+1,"\n")
-    current_pool=[]
-    
-    for j in range(i+7):
-        currTrans = unverified_pool[j]
-        print(currTrans,"\n")
-        
-        sendr,amnt = parse_transaction(unverified_pool[j])
-        Sender = customer_map[sendr]
-        print(sendr+"'s balance before this transaction: ", Sender.wallet,"\n")
-
-        response = input("Confirm this transaction? y/n \n")
-        while "y" not in response and "n" not in response:
-            print("Invalid response. Please yes or no.\n")
-            response = input("Confirm this transaction? y/n \n")
-        
-        if "n" in response:
-            #Rejected transactions are discarded.
-            print("Rejected this transaction.\n ")
+user_input = 'y'
+while user_input != 'n':
+    node_name = input("Enter node name: ")
+    if node_name not in node_map.keys():
+        print("Node doesn't exist!", file = sys.stderr)
+    else:
+        amount = int(input("Number of coins sent to Dexter: "))
+        if amount <= 0 or amount > node_map[node_name].amount:
+            print("Invalid transaction amount!", file = sys.stderr)
         else:
-            print("Adding transaction to verified pool.\n")
-            
-            #Transaction is confirmed hence we add to pool.
-            verified_pool.append(currTrans)
-            current_pool.append(currTrans)
+            node_map[node_name].updateWallet(-amount)
+            node_map["Dexter"].updateWallet(amount)
+            transaction = Transaction(node_name, "Dexter", amount)
+            blockchain.AddTransaction(transaction)
+            print("Transaction successfully added with UUID " + transaction.uuid + ". Current state is UNVERIFIED.")
+    user_input = input("Add another transaction? [type n to quit] ")   
 
-            #Executing the transactions.
-            Sender.updateWallet(amnt)
-            Dexter.updateWallet(-1*amnt)
-        
-        print("-"*70)
-        print("\n")
+print("Current list of unverified transactions:\n")
+pprint.pprint(blockchain.unverified_transaction_pool)    
+print()
 
-    
-    #Mining using PoW
-    blockChain.AddBlock(current_pool)
-    
-    print("Verified pool: ",verified_pool,"\n")
+print("Current list of nodes:\n")
+pprint.pprint(node_map)
+print()
 
-    print("-"*170)
-    print("\n")
+print("Phase #3: We iterate over all the unverified transactions in the Blockchain.")
+print("Behaving as we were Dexter, we can choose to vote for a transaction's validity.")
+print("Currently, Dexter is the only voting node in the blockchain.")
+print("The blockchain is therefore setup to consider the transaction verified as soon as Dexter votes for it.\n")
 
-#Checking if chain is valid.
-print("All transactions processed. Checking chain validity.... \n")
-blockChain.ChainValidity(blockChain.blockchain.copy())
+print("Minimum voting weight for the blockchain to verify transaction: " + str(blockchain.weight_for_validate))
+print("Dexter's voting weight: " + str(node_map["Dexter"].weight) + "\n")
 
-print("Thank you.")
+temp = list(blockchain.unverified_transaction_pool.keys())
+for transaction_uuid in temp:
+    print(blockchain.unverified_transaction_pool[transaction_uuid])
+    while True:
+        user_input = input("Approve transaction? [y/n] ")
+        if user_input == 'y':
+            blockchain.UpdateTransactionVote(transaction_uuid, node_map["Dexter"].weight)
+            break
+        elif user_input == 'n':
+            break
 
+print()
+print("Final Phase: All verified transactions are finalized and stored in the blockchain.")
+print("Each block has a maximum capacity. So verified transactions are split into multiple blocks as needed.")
+print("They are mined using a Proof of Work algorithm using Bitcoin.\n")
+print("Finally, the blockchain is reverified.")
+print()
 
-        
-        
+blockchain.finalize_verified()
+for block in blockchain.blockchain:
+    pprint.pprint(block.serialize())
+print()
 
-
-
-
-
-
-
-
+print("Thank You!")
 
 
     
