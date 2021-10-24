@@ -8,6 +8,9 @@ from Node import Node
 from Transaction import Transaction
 from Blockchain import Blockchain
 
+from PoEt import PoEt, NodeWait
+import asyncio
+
 #Initializing a new blockchain for demonstration.
 blockchain = Blockchain(7, 7, 5)    
 
@@ -69,24 +72,34 @@ pprint.pprint(node_map)
 print()
 
 print("Phase #3: We iterate over all the unverified transactions in the Blockchain.")
-print("Behaving as we were Dexter, we can choose to vote for a transaction's validity.")
-print("Currently, Dexter is the only voting node in the blockchain.")
-print("The blockchain is therefore setup to consider the transaction verified as soon as Dexter votes for it.\n")
+print("The Proof of Elapsed Time consensus algorithm will be performed and the winner will get to mine the block.")
+
+#print("Currently, Dexter is the only voting node in the blockchain.")
+#print("The blockchain is therefore setup to consider the transaction verified as soon as Dexter votes for it.\n")
 
 print("Minimum voting weight for the blockchain to verify transaction: " + str(blockchain.weight_for_validate))
-print("Dexter's voting weight: " + str(node_map["Dexter"].weight) + "\n")
+print(winner+"'s voting weight: " + str(node_map[winner].weight) + "\n")
 
 temp = list(blockchain.unverified_transaction_pool.keys())
+
 for transaction_uuid in temp:
+
+    winner=asyncio.run(PoEt(node_map))
+    print(winner+" is the winner of the block as they finished waiting first.\n")
+    print("Behaving as if we were "+winner+", we can choose to vote for a transaction's validity.")
+    print("Minimum voting weight for the blockchain to verify transaction: " + str(blockchain.weight_for_validate))
+    print(winner+"'s voting weight: " + str(node_map[winner].weight) + "\n")
+
     print(blockchain.unverified_transaction_pool[transaction_uuid])
     while True:
         user_input = input("Approve transaction? [y/n] ")
         if user_input == 'y':
-            blockchain.UpdateTransactionVote(transaction_uuid, node_map["Dexter"].weight)
+            blockchain.UpdateTransactionVote(transaction_uuid, node_map[winner].weight)
             break
         elif user_input == 'n':
             print("[NOTICE] Transaction has been discarded. \n")
             break
+    
 
 print()
 print("Final Phase: All verified transactions are finalized and stored in the blockchain.")
