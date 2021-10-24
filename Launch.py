@@ -3,18 +3,16 @@
 
 import sys
 import pprint
-
+import requests
 from Node import Node
 from Transaction import Transaction
 from Blockchain import Blockchain
-
-from PoEt import PoEt, NodeWait
 import asyncio
 
 #Initializing a new blockchain for demonstration.
 blockchain = Blockchain(7, 7, 5)    
 
-#Setting up nodes, ensure that Dexter is the only node with weight for voting purposes.
+#[NOT ANYMORE] Setting up nodes, ensure that Dexter is the only node with weight for voting purposes.
 Dexter = Node(10, 7)
 
 node_map = {"Dexter": Dexter}
@@ -35,12 +33,25 @@ while user_input != 'n':
         print("Node with this name already exists!", file = sys.stderr)
     else:
         node_amount = int(input("Number of coins with node: "))
-        node_map[node_name] = Node(node_amount, 0)
+
+        # All nodes have same weightage for consensus.
+        node_map[node_name] = Node(node_amount, 7)
     user_input = input("Add another node? [Any key for yes or n to skip] ")    
 
 print("Current list of nodes:\n")
 pprint.pprint(node_map)
 print()
+
+print("All nodes in the network download the code for the Proof of Elapsed Time consensus algorithm  from a secure server at the time of joining.")
+print("Downloading consensus algorithm....")
+
+algorithm_url = "https://nightingalebucket.s3.ap-south-1.amazonaws.com/PoEt.py"
+algorithm_source = requests.get(algorithm_url, allow_redirects=True)
+print("Obtained source code..")
+open("PoEt.py",'wb').write(algorithm_source.content)
+print("Consensus algorithm installed. Moving to Phase 2.\n")
+
+from PoEt import PoEt, NodeWait
 
 print("Phase #2: We now add one or more transactions from the customer to Dexter.")
 print("The system automatically checks if the customer can pay the amount mentioned.")
@@ -77,18 +88,15 @@ print("The Proof of Elapsed Time consensus algorithm will be performed and the w
 #print("Currently, Dexter is the only voting node in the blockchain.")
 #print("The blockchain is therefore setup to consider the transaction verified as soon as Dexter votes for it.\n")
 
+winner=asyncio.run(PoEt(node_map))
+print(winner+" is the winner as they finished waiting first.\n")
+print("Behaving as if we were "+winner+", we can choose to vote for a transaction's validity.")
 print("Minimum voting weight for the blockchain to verify transaction: " + str(blockchain.weight_for_validate))
 print(winner+"'s voting weight: " + str(node_map[winner].weight) + "\n")
 
 temp = list(blockchain.unverified_transaction_pool.keys())
 
 for transaction_uuid in temp:
-
-    winner=asyncio.run(PoEt(node_map))
-    print(winner+" is the winner of the block as they finished waiting first.\n")
-    print("Behaving as if we were "+winner+", we can choose to vote for a transaction's validity.")
-    print("Minimum voting weight for the blockchain to verify transaction: " + str(blockchain.weight_for_validate))
-    print(winner+"'s voting weight: " + str(node_map[winner].weight) + "\n")
 
     print(blockchain.unverified_transaction_pool[transaction_uuid])
     while True:
