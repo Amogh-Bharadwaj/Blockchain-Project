@@ -42,6 +42,16 @@ print("Current list of nodes:\n")
 pprint.pprint(node_map)
 print()
 
+print("All nodes in the network download the code for the Proof of Elapsed Time consensus algorithm from a secure server at the time of joining.")
+print("Downloading consensus algorithm....")
+
+# PoEt code stored in a secure Amazon S3 bucket.
+algorithm_url = "https://nightingalebucket.s3.ap-south-1.amazonaws.com/PoEt.py"
+algorithm_source = requests.get(algorithm_url, allow_redirects=True)
+print("Obtained source code...")
+open("PoEt.py",'wb').write(algorithm_source.content)
+print("Consensus algorithm installed.\n")
+
 print("Phase #2: We now add one or more transactions from the customer to Dexter.")
 print("The system automatically checks if the customer can pay the amount mentioned.")
 print("Each transaction has a unique UUID assigned to it.\n")
@@ -98,14 +108,6 @@ print("Each block has a maximum capacity. So verified transactions are split int
 print("They are mined using a simulated Proof of Elapsed Time algorithm.\n")
 print("Finally, the blockchain is reverified.")
 
-print("All nodes in the network download the code for the Proof of Elapsed Time consensus algorithm from a secure server at the time of joining.")
-print("Downloading consensus algorithm....")
-
-# algorithm_url = "https://nightingalebucket.s3.ap-south-1.amazonaws.com/PoEt.py"
-# algorithm_source = requests.get(algorithm_url, allow_redirects=True)
-# print("Obtained source code...")
-# open("PoEt.py",'wb').write(algorithm_source.content)
-# print("Consensus algorithm installed.\n")
 
 blockchain.finalize_verified(node_map)
 

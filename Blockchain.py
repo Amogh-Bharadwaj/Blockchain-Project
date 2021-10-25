@@ -2,6 +2,8 @@
 
 from Block import Block, Genesis
 from Transaction import Transaction
+from MerkleTree import MerkleTree
+
 from hashlib import sha256
 import sys
 import uuid
@@ -66,7 +68,7 @@ class Blockchain:
 
     #Method for adding a new block.
     def AddBlock(self, block_data: str, node_map: dict):
-        print("Mining block at height " + str(len(self.blockchain)) + "...")
+        print("Mining block at height " + str(len(self.blockchain)) + "...\n")
 
         from PoEt import PoEt
 
@@ -75,7 +77,14 @@ class Blockchain:
         print("They can now mine the block and claim the mining rewards, if any.")
         sys.stdout.flush()
 
-        self.blockchain.append(Block(block_data, sha256(winner.encode('utf-8')).hexdigest()))
+        #Computing Merkle Root for the new block. 
+        Tree = MerkleTree(block_data)
+        block_hash = Tree.MerkleHashRoot()
+        prev_block_hash = self.blockchain[-1].block_hash
+        print("Merkle Tree computed.")
+
+        #Committing the block
+        self.blockchain.append(Block(block_data, sha256(winner.encode('utf-8')).hexdigest(),block_hash,prev_block_hash))
     
 
     def ChainValidity(self):
@@ -84,6 +93,12 @@ class Blockchain:
         if chain[0].block_data != "{}":
             print("Error: First block is not the genesis block.\n")
             return False
+
+        for i in range(1,len(chain)):
+            # Check if previous block hash value is correct, along with current block's hash itself.
+            if (chain[i].previous_block_hash != chain[i-1].block_hash) or (chain[i].block_hash !=  MerkleTree(chain[i].block_data).MerkleHashRoot()):
+                print("Hash discrepancy. Block is invalid.")
+                return False
 
         print("No discrepancies found. The blockchain has been reverified successfully.\n")
         return True
