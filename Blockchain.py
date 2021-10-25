@@ -6,6 +6,7 @@ from hashlib import sha256
 import sys
 import uuid
 import json
+import asyncio
 
 class Blockchain:
     
@@ -27,20 +28,6 @@ class Blockchain:
         self.unverified_transaction_pool = {}
 
         self.uuid = uuid.uuid4().hex
-
-    def ProofOfWork(self, prev_hash: str, block_data: str):
-        nonce = 1
-        to_compare = '0' * self.difficulty
-        merged_data = str(prev_hash) + block_data
-        while True:
-            test = merged_data + str(nonce)
-            test_hash = sha256(test.encode('utf-8')).hexdigest()[:self.difficulty]
-            if test_hash == to_compare:
-                break
-            else:
-                nonce += 1
-        return [sha256(test.encode('utf-8')).hexdigest(), nonce]
-
 
     def AddTransaction(self, transaction: Transaction):
         #Checking for key conflicts, so other transactions are not overwritten.
@@ -78,13 +65,17 @@ class Blockchain:
 
 
     #Method for adding a new block.
-    def AddBlock(self, block_data: str):
+    def AddBlock(self, block_data: str, node_map: dict):
         print("Mining block at height " + str(len(self.blockchain)) + "...")
-        new_hash, nonce = self.ProofOfWork(self.blockchain[-1].proof_of_work, block_data)
-        print("Block added. Proof(hex): ", new_hash)
+
+        from PoEt import PoEt
+
+        winner = asyncio.run(PoEt(node_map))
+        print(winner + " is the winner as they finished waiting first.\n")
+        print("They can now mine the block and claim the mining rewards, if any.")
         sys.stdout.flush()
 
-        self.blockchain.append(Block(block_data, new_hash, nonce))
+        self.blockchain.append(Block(block_data, sha256(winner.encode('utf-8')).hexdigest()))
     
 
     def ChainValidity(self):
@@ -93,14 +84,6 @@ class Blockchain:
         if chain[0].block_data != "{}":
             print("Error: First block is not the genesis block.\n")
             return False
-        
-        for i in range(1,len(chain)): 
-            proof_test = sha256((str(chain[i - 1].proof_of_work) + chain[i].block_data + str(chain[i].nonce)).encode('utf-8')).hexdigest()
-
-            #Checking the proof of work puzzle as well as the proof itself.
-            if proof_test[:self.difficulty]!='0'*self.difficulty and proof_test==chain[i].proof_of_work:
-                print("\n Blockchain is invalid! Corrupt block was created at timestamp ",chain[i].timestamp,".")
-                return False
 
         print("No discrepancies found. The blockchain has been reverified successfully.\n")
         return True
@@ -119,7 +102,7 @@ class Blockchain:
     
 
     #Carrying out block creation upon finishing transaction validations
-    def finalize_verified(self):
+    def finalize_verified(self, node_map: dict):
          verified_list = list(self.verified_transaction_pool.values())
          cache = []
 
@@ -129,11 +112,11 @@ class Blockchain:
               
              #Once transaction threshold is reached, create a block. 
              if len(cache) == self.max_block_capacity:
-                 self.AddBlock(json.dumps(cache))
+                 self.AddBlock(json.dumps(cache), node_map)
                  cache.clear()
          #Create a block for the remaining transactions.
          if len(cache) > 0:
-                 self.AddBlock(json.dumps(cache))
+                 self.AddBlock(json.dumps(cache), node_map)
                  cache.clear() 
 
 

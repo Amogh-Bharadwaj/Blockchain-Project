@@ -12,24 +12,23 @@ import asyncio
 # Uses a sleep() function to simulate "waiting".
 async def NodeWait(node:str,delay:float):
     await asyncio.sleep(delay)
-    print(node," done waiting.")
-
-async def PoEt(nodes:dict):
+    print(node + " done waiting.")
+    
+async def PoEt(nodes: dict):
     time_map = {} # A dictionary to store nodes and the wait times they receive.
     winner = ""
-    wait_min=11
+    wait_min = 11
     for node in nodes:
-        time_map[node]=uniform(1, 10) # A random lottery
+        time_map[node]= uniform(1, 7) # A random lottery
         
-
         # Evaluating the winner
-        if time_map[node]<wait_min:
-            wait_min=time_map[node]
-            winner=node
+        if time_map[node] < wait_min:
+            wait_min = time_map[node]
+            winner = node
 
     
     for node in time_map:
-        print(node," will wait for: ",time_map[node]," seconds.\n")
+        print(node + " will wait for: ",time_map[node]," seconds.\n")
 
     print("Waiting...\n")
 
